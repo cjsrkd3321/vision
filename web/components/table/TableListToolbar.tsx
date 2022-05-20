@@ -70,18 +70,18 @@ export default function TableListToolbar({
 
   useEffect(() => {
     const url = new URL(document.location as any);
-    if (url.search !== '' && type && name && q) {
+    if (url.search !== '' && type && name) {
       if (
         typeof type !== 'string' ||
         typeof name !== 'string' ||
-        typeof q !== 'string'
+        (typeof q !== 'string' && !!q)
       )
         return;
       url.searchParams.set('type', type);
       url.searchParams.set('name', name);
-      url.searchParams.set('q', q);
+      url.searchParams.set('q', q ?? '');
       setTitle({ type, name });
-      setFilterName(q);
+      setFilterName(q ?? '');
     }
   }, []);
 
