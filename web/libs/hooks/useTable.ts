@@ -17,6 +17,7 @@ import useSWR from 'swr';
 
 interface UseTableProps {
   getUrl: string;
+  hasInterval?: boolean;
   postUrl?: string;
   buttonSettings?: ButtonSettings;
   hasChip?: boolean;
@@ -33,6 +34,7 @@ interface UseSWRState<T> {
 
 export default function useTable<T = any>({
   getUrl,
+  hasInterval = true,
   postUrl,
   buttonSettings = {
     isPopover: true,
@@ -53,7 +55,7 @@ export default function useTable<T = any>({
   const setPostApiUrl = useSetRecoilState(postApiUrlState);
   const setHasChip = useSetRecoilState(hasChipState);
   const setFilterName = useSetRecoilState(queryFilter);
-  const { data, error } = useSWR<UseSWRState<T>>(getUrl);
+  const { data, error } = useSWR<UseSWRState<T>>(getUrl, { refreshInterval: hasInterval ? 5000 : 0 });
 
   let dataError = data?.error;
   let dataMsg = data?.msg;
@@ -67,7 +69,14 @@ export default function useTable<T = any>({
       setHasChip(false);
       setFilterName('');
     };
-  }, [setResults, setGetApiUrl, setPostApiUrl, setTitle, setHasChip, setFilterName]);
+  }, [
+    setResults,
+    setGetApiUrl,
+    setPostApiUrl,
+    setTitle,
+    setHasChip,
+    setFilterName,
+  ]);
 
   useEffect(() => {
     setHasTitle(existsTitle);

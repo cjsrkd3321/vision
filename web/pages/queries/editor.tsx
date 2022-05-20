@@ -21,6 +21,7 @@ const Query: NextPage<{ me: User; columns: any }> = ({ me, columns }) => {
   const router = useRouter();
   const { dataError, dataMsg, error } = useTable({
     getUrl: '/api/steampipe-columns',
+    hasInterval: false,
     postUrl: undefined,
     existsTitle: false,
   });
