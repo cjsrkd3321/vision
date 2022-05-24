@@ -35,7 +35,7 @@ export default function Editor({
   const setFilterName = useSetRecoilState(queryFilter);
   const [query, setQuery] = useState(`SELECT * FROM aws_account LIMIT 1`);
   const regex =
-    /(;)|\/\*(.*)\*\/|(--).*|--|\/\*(.*)|\*\/|(\b(ALTER|INFORMATION_SCHEMA|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|UPDATE|UNION( +ALL){0,1})\b)/gi;
+    /(;)|\/\*(.*)\*\/|(--).*|--|\/\*(.*)|\*\/|(\b(ALTER|INFORMATION_SCHEMA|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|UPDATE)\b)/gi;
   const tables: string[] = [];
   if (data) data.map((d: any) => tables.push(d.table_name));
 

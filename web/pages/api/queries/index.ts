@@ -12,7 +12,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   }
 
   const regex =
-    /(;)|\/\*(.*)\*\/|(--).*|--|\/\*|\*\/|(\b(ALTER|INFORMATION_SCHEMA|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|UPDATE|UNION( +ALL){0,1})\b)/gi;
+    /(;)|\/\*(.*)\*\/|(--).*|--|\/\*|\*\/|(\b(ALTER|INFORMATION_SCHEMA|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|UPDATE)\b)/gi;
 
   if (query.search(regex) !== -1) {
     return res.status(403).json({
@@ -22,7 +22,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   }
 
   const checkQuery = query.toUpperCase();
-  const isAsteriskColumn = checkQuery.includes('SELECT *');
+  const isAsteriskColumn = !checkQuery.search(/SELECT +\* +FROM/gi);
 
   if (checkQuery.search(/SELECT +FROM/gi) !== -1) {
     return res.status(400).json({
@@ -33,6 +33,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 
   try {
     let data = [];
+    console.log(query);
     if (isAsteriskColumn && !checkQuery.includes(' LIMIT 1')) {
       data = (await pgClient?.query(query.concat(' LIMIT 1'))).rows;
     } else {
