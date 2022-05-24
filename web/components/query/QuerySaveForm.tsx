@@ -44,7 +44,7 @@ export default function QuerySaveForm({ query }: { query: string }) {
       >
         <Autocomplete
           disablePortal
-          options={['COMPLIANCE', 'CUSTOM']}
+          options={['COMPLIANCE', 'CUSTOM', 'SG']}
           sx={{ minWidth: '200px', mr: 1 }}
           renderInput={(params) => <TextField {...register('category')} {...params} label='CATEGORY' />}
           size='medium'

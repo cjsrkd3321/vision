@@ -22,7 +22,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   }
 
   const checkQuery = query.toUpperCase();
-  const isAsteriskColumn = !checkQuery.search(/SELECT +\* +FROM/gi);
+  const isAsteriskColumn = checkQuery.search(/SELECT +\* +FROM/gi) !== -1 ? true : false;
 
   if (checkQuery.search(/SELECT +FROM/gi) !== -1) {
     return res.status(400).json({
@@ -33,7 +33,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 
   try {
     let data = [];
-    console.log(query);
     if (isAsteriskColumn && !checkQuery.includes(' LIMIT 1')) {
       data = (await pgClient?.query(query.concat(' LIMIT 1'))).rows;
     } else {

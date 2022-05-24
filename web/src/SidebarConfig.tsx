@@ -43,6 +43,25 @@ const sidebarConfig = [
     ],
   },
   {
+    title: 'SECURITY GROUP',
+    path: '/security-groups',
+    icon: getIcon('clarity:firewall-line'),
+    children: [
+      {
+        title: 'Request',
+        path: '/security-groups/request',
+      },
+      // {
+      //   title: 'My Rules',
+      //   path: '/security-groups/my-rules',
+      // },
+      // {
+      //   title: 'All Rules',
+      //   path: '/security-groups/all-rules',
+      // },
+    ],
+  },
+  {
     title: 'COMPLIANCE',
     path: '/compliances',
     icon: getIcon('eva:pie-chart-2-fill'),

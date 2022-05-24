@@ -38,12 +38,13 @@ let currentQueryIds = [];
 const createBatch = async () => {
   try {
     const results = await prisma.queries.findMany({
-      include: {
-        user: {},
-        resources: {},
-        compliances: {},
-      },
+      // include: {
+      //   user: {},
+      //   resources: {},
+      //   compliances: {},
+      // },
     });
+
     results.forEach((result) => {
       const { id, query, category } = result;
       if (currentQueryIds.includes(id)) return;
@@ -52,9 +53,13 @@ const createBatch = async () => {
         currentQueryIds.push(id);
         console.log(`[COMPLIANCE] ${id}`);
         Batch.complianceBatch(query, id);
-      } else {
+      } else if (category === 'CUSTOM') {
         currentQueryIds.push(id);
         console.log(`[RESOURCE] ${id}`);
+        Batch.resourceBatch(query, id);
+      } else if (category === 'SG') {
+        currentQueryIds.push(id);
+        console.log(`[SG] ${id}`);
         Batch.resourceBatch(query, id);
       }
     });
