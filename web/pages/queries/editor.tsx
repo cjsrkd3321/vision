@@ -6,7 +6,6 @@ import { User } from '@prisma/client';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import prisma from '@libs/utils/prisma';
 import { Link, Stack } from '@mui/material';
 import Button from '@components/Button';
 import useTable from '@libs/hooks/useTable';
