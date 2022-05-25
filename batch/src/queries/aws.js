@@ -10,6 +10,8 @@ export const SG_SERVER_EC2 = `
     security_groups as sg
   FROM 
     aws_ec2_instance
+  WHERE
+    instance_state = 'running'
 `;
 
 // // Account
