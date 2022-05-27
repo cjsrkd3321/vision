@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Queries, User } from '@prisma/client';
 
 interface QueryWithUser extends Partial<Queries> {
-  user?: Partial<User>;
+  user?: Partial<User> | null;
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
