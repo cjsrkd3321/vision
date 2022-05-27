@@ -37,7 +37,7 @@ export default function useTable<T = any>({
   hasInterval = true,
   postUrl,
   buttonSettings = {
-    isPopover: true,
+    isPopover: false,
     text: 'Hello',
     color: 'success',
     size: 'medium',

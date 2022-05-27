@@ -33,7 +33,7 @@ export interface ButtonSettings {
 export const buttonSettingState = atom<ButtonSettings>({
   key: 'buttonSettingState',
   default: {
-    isPopover: true,
+    isPopover: false,
     text: 'Hello',
     color: 'success',
     size: 'medium',
