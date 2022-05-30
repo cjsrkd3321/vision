@@ -1,9 +1,9 @@
-import md5 from 'md5';
 import withHandler from '@libs/server/withHandler';
 import { withApiSession } from '@libs/server/withSession';
 import pgClient from '@libs/utils/pgClient';
 import prisma from '@libs/utils/prisma';
 import { Response } from '@_types/common-type';
+import md5 from 'md5';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const queryWithInstanceId = (instanceId: string) => {
@@ -65,7 +65,7 @@ const getSecurityGroupInfo = ({
 async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   // NOTE: GET
   if (req.method === 'GET') {
-      return res.status(200).json({ ok: true, error: 'Unimplemented' });
+    return res.status(200).json({ ok: true, error: 'Unimplemented' });
   }
 
   // NOTE: POST
@@ -78,7 +78,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
     if (!['TCP', 'UDP', 'ICMP'].includes(protocol)) {
       return res.status(400).json({
         ok: false,
-        error: `Protocol can select one of 'TCP', 'UDP', 'ICMP'`
+        error: `Protocol can select one of 'TCP', 'UDP', 'ICMP'`,
       });
     }
 
@@ -103,12 +103,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
     if (port < 1 || port > 65535) {
       return res.status(400).json({
         ok: false,
-        error: 'Port range needs to be between 1 and 65535'
-      })
+        error: 'Port range needs to be between 1 and 65535',
+      });
     }
 
     if (reason.length < 6 || reason.length > 255) {
-      return res.status(400).json({ ok: false, error: 'Reason length needs to be between 6 and 255'});
+      return res
+        .status(400)
+        .json({
+          ok: false,
+          error: 'Reason length needs to be between 6 and 255',
+        });
     }
 
     try {
@@ -118,22 +123,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
             {
               id: srcId,
             },
-            srcId !== dstId ? {
-              id: dstId,
-            } : {},
+            srcId !== dstId
+              ? {
+                  id: dstId,
+                }
+              : {},
           ],
         },
       });
-      srcId === dstId ? dst = { ...src } : null;
+      srcId === dstId ? (dst = { ...src }) : null;
       if (!src || !dst) {
         return res.status(404).json({
           ok: false,
-          error: 'srcId or dstId does not exist'
-        })
+          error: 'srcId or dstId does not exist',
+        });
       }
 
-      const { instance_id: srcInstanceId, vpc_id: srcVpcId } = JSON.parse(src.result);
-      const { instance_id: dstInstanceId, vpc_id: dstVpcId, region: dstRegion } = JSON.parse(dst.result);
+      const { instance_id: srcInstanceId, vpc_id: srcVpcId } = JSON.parse(
+        src.result
+      );
+      const {
+        instance_id: dstInstanceId,
+        vpc_id: dstVpcId,
+        region: dstRegion,
+      } = JSON.parse(dst.result);
 
       if (srcVpcId !== dstVpcId) {
         return res.status(400).json({
@@ -142,15 +155,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
         });
       }
 
-      const [srcResult, ..._srcRest] = (await pgClient?.query(queryWithInstanceId(srcInstanceId))).rows;
+      const [srcResult, ..._srcRest] = (
+        await pgClient?.query(queryWithInstanceId(srcInstanceId))
+      ).rows;
       if (!srcResult) {
         return res.status(404).json({
           ok: false,
           error: `Src ${srcInstanceId} has no SG with tag(Type = REF)`,
-        })
+        });
       }
 
-      const [dstResult, ..._dstRest] = (await pgClient?.query(queryWithInstanceId(dstInstanceId))).rows;
+      const [dstResult, ..._dstRest] = (
+        await pgClient?.query(queryWithInstanceId(dstInstanceId))
+      ).rows;
       if (!dstResult) {
         return res.status(404).json({
           ok: false,
@@ -163,22 +180,31 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
       const uid = md5(account_id + dstSgId + protocol + port + srcSgId);
 
       const duplicatedResult = await prisma?.securityGroup.findUnique({
-        where: { 
+        where: {
           uid,
         },
       });
       if (duplicatedResult) {
-        return res.status(400).json({ ok: false, error: `Your request is already requested or completed (${duplicatedResult.status})` });
+        return res
+          .status(400)
+          .json({
+            ok: false,
+            error: `Your request is already requested or completed (${duplicatedResult.status})`,
+          });
       }
 
-      const securityGroupInfo = (await pgClient?.query(getSecurityGroupInfo({
-        accountId: account_id,
-        region: dstRegion,
-        sgId: dstSgId,
-        protocol,
-        port,
-        source: srcSgId,
-      }))).rows;
+      const securityGroupInfo = (
+        await pgClient?.query(
+          getSecurityGroupInfo({
+            accountId: account_id,
+            region: dstRegion,
+            sgId: dstSgId,
+            protocol,
+            port,
+            source: srcSgId,
+          })
+        )
+      ).rows;
       if (!!securityGroupInfo.length) {
         const [{ account_id, region, sg_id, sgr_id }] = securityGroupInfo;
         return res.status(400).json({
@@ -201,14 +227,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
           user: {
             connect: { id },
           },
-        }
-      })
+        },
+      });
 
       return res.status(200).json({
         ok: true,
-        msg: `Request succeeded`
+        msg: `Request succeeded`,
       });
-    } catch(error: any) {
+    } catch (error: any) {
       const { message: msg, code } = error;
       if (code === 'ECONNREFUSED') {
         return res.status(500).json({
@@ -225,4 +251,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 export default withApiSession(
   withHandler({ methods: ['GET', 'POST'], handler })
 );
-

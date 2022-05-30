@@ -8,38 +8,39 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   // NOTE: GET
   if (req.method === 'GET') {
     const {
-        session: { user: { role } = {} },
-      } = req;
+      session: { user: { role } = {} },
+    } = req;
 
     if (role !== 'ADMIN') {
-        return res.status(403).json({
-            ok: false,
-            error: `THIS PAGE CAN VIEW ONLY ADMIN`,
-        });
+      return res.status(403).json({
+        ok: false,
+        error: `THIS PAGE CAN VIEW ONLY ADMIN`,
+      });
     }
 
     const data = await prisma.securityGroup.findMany({
-        select: {
-            id: true,
-            accountId: true,
-            sgId: true,
-            sgrId: true,
-            requestedAt: true,
-            createdAt: true,
-            modifiedAt: true,
-            protocol: true,
-            port: true,
-            source: true,
-            reason: true,
-            status: true,
-            user: {
-                select: { userId: true },
-            },
+      select: {
+        id: true,
+        accountId: true,
+        sgId: true,
+        sgrId: true,
+        requestedAt: true,
+        createdAt: true,
+        modifiedAt: true,
+        protocol: true,
+        port: true,
+        source: true,
+        reason: true,
+        status: true,
+        user: {
+          select: { userId: true },
         },
+      },
     });
 
     const newData = data.map((datum) => {
       const userId = datum?.user?.userId;
+      // @ts-ignore
       delete datum?.user;
       return { ...datum, userId };
     });
@@ -56,4 +57,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 export default withApiSession(
   withHandler({ methods: ['GET', 'POST'], handler })
 );
-

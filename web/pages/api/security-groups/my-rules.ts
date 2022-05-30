@@ -8,28 +8,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
   // NOTE: GET
   if (req.method === 'GET') {
     const {
-        session: { user: { id } = {} },
-      } = req;
+      session: { user: { id } = {} },
+    } = req;
     const data = await prisma.securityGroup.findMany({
-        where: {
-            user: {
-                id,
-            },
+      where: {
+        user: {
+          id,
         },
-        select: {
-            id: true,
-            accountId: true,
-            sgId: true,
-            sgrId: true,
-            requestedAt: true,
-            createdAt: true,
-            modifiedAt: true,
-            protocol: true,
-            port: true,
-            source: true,
-            reason: true,
-            status: true,
-        },
+      },
+      select: {
+        id: true,
+        accountId: true,
+        sgId: true,
+        sgrId: true,
+        requestedAt: true,
+        createdAt: true,
+        modifiedAt: true,
+        protocol: true,
+        port: true,
+        source: true,
+        reason: true,
+        status: true,
+      },
     });
 
     return res.json({ ok: true, data });
@@ -44,4 +44,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 export default withApiSession(
   withHandler({ methods: ['GET', 'POST'], handler })
 );
-

@@ -4,7 +4,10 @@ import {
 } from '@aws-sdk/client-iam';
 import Batch from '../libs/batch';
 import { iamClient } from '../libs/aws/iamClient';
-import { EC2Client, AuthorizeSecurityGroupIngressCommand } from "@aws-sdk/client-ec2";
+import {
+  EC2Client,
+  AuthorizeSecurityGroupIngressCommand,
+} from '@aws-sdk/client-ec2';
 import { HOUR, SECOND } from '../libs/time';
 import { prisma } from '../libs/prisma';
 
@@ -89,23 +92,28 @@ const createSecurityGroupBatch = async () => {
       const ec2 = new EC2Client({ region });
 
       try {
-        const response = await ec2.send(new AuthorizeSecurityGroupIngressCommand({
-          GroupId: result.sgId,
-          IpPermissions: [
-            {
-              FromPort: port,
-              ToPort: port,
-              IpProtocol: protocol,
-              UserIdGroupPairs: [
-                {
-                  GroupId: source,
-                },
-              ],
-            },
-          ],
-        }));
+        const response = await ec2.send(
+          new AuthorizeSecurityGroupIngressCommand({
+            GroupId: result.sgId,
+            IpPermissions: [
+              {
+                FromPort: port,
+                ToPort: port,
+                IpProtocol: protocol,
+                UserIdGroupPairs: [
+                  {
+                    GroupId: source,
+                  },
+                ],
+              },
+            ],
+          })
+        );
 
-        const { Return, SecurityGroupRules: [{ SecurityGroupRuleId }] } = response;
+        const {
+          Return,
+          SecurityGroupRules: [{ SecurityGroupRuleId }],
+        } = response;
 
         if (!Return) {
           await prisma.securityGroup.update({
@@ -123,9 +131,11 @@ const createSecurityGroupBatch = async () => {
             createdAt: new Date(),
             status: 'COMPLETED',
           },
-        })
+        });
       } catch (error) {
-        console.log(`[createSecurityGroupBatch][Authorize][ERROR] : ${error.message}`);
+        console.log(
+          `[createSecurityGroupBatch][Authorize][ERROR] : ${error.message}`
+        );
       }
     });
   } catch (error) {
@@ -133,7 +143,7 @@ const createSecurityGroupBatch = async () => {
   } finally {
     setTimeout(createSecurityGroupBatch, 30 * SECOND);
   }
-}
+};
 
 // setTimeout(createCredentialReport, SECOND);
 setTimeout(createQueryBatch, SECOND);
