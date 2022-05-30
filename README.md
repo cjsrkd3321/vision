@@ -5,6 +5,10 @@
 
 - This system can use for managing about CMDB(Configuration Management Database), Compliance Tracker, Regular Inspectation etc...
 
+## Coming Soon
+- [WIP] Managing Security Group
+- If you wanna test this function, give 'ec2:AuthorizeSecurityGroupIngress' to BATCH server.
+
 _Table of contents:_
 
 - [SImple Architecture](#simple-architecture)

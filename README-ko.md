@@ -5,6 +5,10 @@
 
 - 클라우드 현황에 대해 쿼리를 통한 현황 관리와 보안상 취약한 결과들을 종합하여, 예외처리/삭제 등에 대한 이력을 관리 가능한 시스템입니다.
 
+## Coming Soon
+- [WIP] Security Group 관리 기능
+- 만약 이 기능을 테스트하고싶으면, 'ec2:AuthorizeSecurityGroupIngress' 권한을 BATCH 서버에 부여하세요.
+
 _목차:_
 
 - [SImple Architecture](#simple-architecture)
