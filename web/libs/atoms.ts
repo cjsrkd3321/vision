@@ -66,6 +66,34 @@ export const postApiUrlState = atom<string | undefined>({
   default: undefined,
 });
 
+export const hasRequestButtonState = atom<boolean>({
+  key: 'hasRequestButtonState',
+  default: false,
+});
+
+export type Protocol = 'TCP' | 'UDP' | 'ICMP';
+
+export interface SgRequestForm {
+  protocol: Protocol;
+  source?: string;
+  sourceId?: number;
+  destination?: string;
+  destinationId?: number;
+}
+
+export const sgRequestFormState = atom<SgRequestForm>({
+  key: 'sgRequestFormState',
+  default: {
+    protocol: 'TCP',
+    source: undefined,
+    sourceId: undefined,
+    destination: undefined,
+    destinationId: undefined,
+  },
+});
+
+// NOTE: SELECTOR
+
 export const queryTitles = selector({
   key: 'queryTitles',
   get: ({ get }) => {

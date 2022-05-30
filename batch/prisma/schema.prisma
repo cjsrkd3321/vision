@@ -18,6 +18,7 @@ model User {
   role       Role
   queries    Queries[]
   exceptions Exception[]
+  securityGroups SecurityGroup[]
 }
 
 enum Role {
@@ -27,7 +28,7 @@ enum Role {
 
 model Compliance {
   id           Int         @id @default(autoincrement())
-  result       String      @db.VarChar(2000)
+  result       String      @db.Text
   uid          String
   registeredAt DateTime    @default(now())
   isDeleted    Boolean     @default(false)
@@ -49,7 +50,7 @@ model Exception {
 
 model Resource {
   id        Int      @id @default(autoincrement())
-  result    String   @db.VarChar(2000)
+  result    String   @db.Text
   uid       String
   queries   Queries? @relation(fields: [queriesId], references: [id], onDelete: Cascade)
   queriesId Int?
@@ -74,4 +75,43 @@ enum CATEGORY {
   COMPLIANCE
   CUSTOM
   SG
+}
+
+model SecurityGroup {
+  id Int @id @default(autoincrement())
+  accountId String
+  region String
+  sgId String
+  sgrId String?
+  requestedAt DateTime @default(now())
+  createdAt DateTime?
+  modifiedAt DateTime?
+  deletedAt DateTime?
+  modifyDetectedAt DateTime?
+  deleteDetectedAt DateTime?
+  protocol PROTOCOL
+  port Int
+  source String
+  reason String @db.VarChar(256)
+  status STATUS
+  uid String @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int
+}
+
+enum PROTOCOL {
+  TCP
+  UDP
+  ICMP
+}
+
+enum STATUS {
+  REQUEST_CREATE
+  REQUEST_MODIFY
+  REQUEST_DELETE
+  COMPLETED
+  DELETED
+  DETECT_MODIFIED // Modified by others except for this system
+  DETECT_DELETED // Deleted by others except for this system
+  FALIED
 }

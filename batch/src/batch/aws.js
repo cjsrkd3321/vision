@@ -4,7 +4,8 @@ import {
 } from '@aws-sdk/client-iam';
 import Batch from '../libs/batch';
 import { iamClient } from '../libs/aws/iamClient';
-import { HOUR, MINUTE, SECOND } from '../libs/time';
+import { EC2Client, AuthorizeSecurityGroupIngressCommand } from "@aws-sdk/client-ec2";
+import { HOUR, SECOND } from '../libs/time';
 import { prisma } from '../libs/prisma';
 
 // NOTE: Create credential report
@@ -19,7 +20,7 @@ const createCredentialReport = async () => {
     // console.log(`[createCredentialReport][TRY] : ${remainedTime}`);
     return;
   } catch (error) {
-    console.log(`[createCredentialReport][ERROR] : ${error?.GeneratedTime}`);
+    // console.log(`[createCredentialReport][ERROR] : ${error?.GeneratedTime}`);
     // while (true) {
     //   const data = await iamClient.send(new GenerateCredentialReportCommand());
     //   if (data.State === 'COMPLETE') {
@@ -28,22 +29,16 @@ const createCredentialReport = async () => {
     //   }
     // }
   } finally {
-    console.log(`[createCredentialReport][FINALLY] Waiting...`);
+    // console.log(`[createCredentialReport][FINALLY] Waiting...`);
     // setTimeout(createCredentialReport, remainedTime);
   }
 };
 
 // NOTE: Create batch job for user's queries.
 let currentQueryIds = [];
-const createBatch = async () => {
+const createQueryBatch = async () => {
   try {
-    const results = await prisma.queries.findMany({
-      // include: {
-      //   user: {},
-      //   resources: {},
-      //   compliances: {},
-      // },
-    });
+    const results = await prisma.queries.findMany({});
 
     results.forEach((result) => {
       const { id, query, category } = result;
@@ -64,12 +59,82 @@ const createBatch = async () => {
       }
     });
   } catch (error) {
-    console.log(`[createBatch][ERROR] : ${error?.GeneratedTime}`);
+    console.log(`[createQeuryBatch][ERROR] : ${error.message}`);
   } finally {
-    // console.log(`[createBatch][FINALLY] Waiting...`);
-    setTimeout(createBatch, 10 * SECOND);
+    // console.log(`[createQueryBatch][FINALLY] Waiting...`);
+    setTimeout(createQueryBatch, 30 * SECOND);
   }
 };
 
-setTimeout(createCredentialReport, SECOND);
-setTimeout(createBatch, SECOND);
+const createSecurityGroupBatch = async () => {
+  try {
+    const results = await prisma.securityGroup.findMany({
+      where: {
+        status: 'REQUEST_CREATE',
+      },
+      select: {
+        id: true,
+        accountId: true,
+        region: true,
+        sgId: true,
+        sgrId: true,
+        protocol: true,
+        port: true,
+        source: true,
+      },
+    });
+
+    results.forEach(async (result) => {
+      const { id, region, port, protocol, source } = result;
+      const ec2 = new EC2Client({ region });
+
+      try {
+        const response = await ec2.send(new AuthorizeSecurityGroupIngressCommand({
+          GroupId: result.sgId,
+          IpPermissions: [
+            {
+              FromPort: port,
+              ToPort: port,
+              IpProtocol: protocol,
+              UserIdGroupPairs: [
+                {
+                  GroupId: source,
+                },
+              ],
+            },
+          ],
+        }));
+
+        const { Return, SecurityGroupRules: [{ SecurityGroupRuleId }] } = response;
+
+        if (!Return) {
+          await prisma.securityGroup.update({
+            where: { id },
+            data: {
+              status: 'FALIED',
+            },
+          });
+        }
+
+        await prisma.securityGroup.update({
+          where: { id },
+          data: {
+            sgrId: SecurityGroupRuleId,
+            createdAt: new Date(),
+            status: 'COMPLETED',
+          },
+        })
+      } catch (error) {
+        console.log(`[createSecurityGroupBatch][Authorize][ERROR] : ${error.message}`);
+      }
+    });
+  } catch (error) {
+    console.log(`[createSecurityGroupBatch][ERROR] : ${error.message}`);
+  } finally {
+    setTimeout(createSecurityGroupBatch, 30 * SECOND);
+  }
+}
+
+// setTimeout(createCredentialReport, SECOND);
+setTimeout(createQueryBatch, SECOND);
+setTimeout(createSecurityGroupBatch, SECOND);

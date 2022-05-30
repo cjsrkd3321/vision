@@ -20,6 +20,7 @@
     "prisma": "^3.14.0"
   },
   "dependencies": {
+    "@aws-sdk/client-ec2": "^3.100.0",
     "@aws-sdk/client-iam": "^3.56.0",
     "@prisma/client": "^3.14.0",
     "dotenv": "^16.0.0",

@@ -25,13 +25,15 @@ import TableListHead from '@components/table/TableListHead';
 import TableListToolbar from '@components/table/TableListToolbar';
 import PopoverButton from '@components/PopoverButton';
 
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import {
   queryFilter,
   queryBody,
   postApiUrlState,
   buttonSettingState,
   getApiUrlState,
+  hasRequestButtonState,
+  sgRequestFormState,
 } from '@libs/atoms';
 import { isJsonString } from '@libs/utils';
 import { format } from 'sql-formatter';
@@ -74,19 +76,25 @@ function applySortFilter(
   if (query) {
     return filter(array, (arr) => {
       const refinedData = Object.values(arr)
-                          .map((stringifiedArr) => (typeof stringifiedArr === 'string' ? stringifiedArr : JSON.stringify(stringifiedArr)))
-                          .toString()
-                          .toLowerCase();
+        .map((stringifiedArr) =>
+          typeof stringifiedArr === 'string'
+            ? stringifiedArr
+            : JSON.stringify(stringifiedArr)
+        )
+        .toString()
+        .toLowerCase();
       if (query.startsWith('OR:')) {
         const splitedQueries = query.slice(3).split('||');
         for (const splitedQuery of splitedQueries) {
-          if (refinedData.includes(splitedQuery.trim().toLowerCase())) return true;
+          if (refinedData.includes(splitedQuery.trim().toLowerCase()))
+            return true;
         }
         return false;
       } else if (query.startsWith('AND:')) {
         const splitedQueries = query.slice(4).split('&&');
         for (const splitedQuery of splitedQueries) {
-          if (!refinedData.includes(splitedQuery.trim().toLowerCase())) return false;
+          if (!refinedData.includes(splitedQuery.trim().toLowerCase()))
+            return false;
         }
         return true;
       } else {
@@ -130,6 +138,9 @@ export default function Table({ rows = 10 }: any) {
 
   const getApiUrl = useRecoilValue(getApiUrlState) || '';
   const postApiUrl = useRecoilValue(postApiUrlState) || '';
+  const hasRequestButton = useRecoilValue(hasRequestButtonState);
+  const [sgRequestForm, setSgRequestForm] = useRecoilState(sgRequestFormState);
+
   const [mutateFn, { loading, data, error }] = useMutation(postApiUrl);
 
   const { mutate } = useSWRConfig();
@@ -171,6 +182,34 @@ export default function Table({ rows = 10 }: any) {
     };
   };
 
+  const onClickForRequestForm = (id: number) => {
+    return () => {
+      for (const [_, value] of Object.entries(filteredData)) {
+        if (typeof value === 'number' || !('_id' in value)) return;
+        if (typeof value._id !== 'number' || value._id !== id) continue;
+
+        if (sgRequestForm.source && sgRequestForm.destination) {
+          console.log('ITS FULL!!');
+          return;
+        }
+
+        if (sgRequestForm.source) {
+          setSgRequestForm({
+            ...sgRequestForm,
+            destination: `${value.instance_id}(${value.title} / ${value.private_ip} / ${value.public_ip})`,
+            destinationId: value._id,
+          });
+        } else {
+          setSgRequestForm({
+            ...sgRequestForm,
+            source: `${value.instance_id}(${value.title} / ${value.private_ip} / ${value.public_ip})`,
+            sourceId: value._id,
+          });
+        }
+      }
+    };
+  };
+
   return (
     <Container maxWidth={false} disableGutters>
       <Card>
@@ -208,7 +247,7 @@ export default function Table({ rows = 10 }: any) {
                               >
                                 {Object.values(filteredDatum).length ===
                                 idx + 1 ? (
-                                  postApiUrl ? (
+                                  postApiUrl && !hasRequestButton ? (
                                     buttonSettings.isPopover ? (
                                       <PopoverButton
                                         id={row}
@@ -221,6 +260,12 @@ export default function Table({ rows = 10 }: any) {
                                         {...buttonSettings}
                                       />
                                     )
+                                  ) : hasRequestButton ? (
+                                    <Button
+                                      id={row}
+                                      onClick={onClickForRequestForm(row)}
+                                      {...buttonSettings}
+                                    />
                                   ) : null
                                 ) : (
                                   <Typography

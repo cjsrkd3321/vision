@@ -3,13 +3,15 @@ import {
   buttonSettingState,
   getApiUrlState,
   hasChipState,
+  hasRequestButtonState,
   hasTitleState,
   postApiUrlState,
+  queryFilter,
   queryResults,
   QueryTitle,
   queryTitle,
   queryTitles,
-  queryFilter,
+  sgRequestFormState,
 } from '@libs/atoms';
 import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -18,6 +20,7 @@ import useSWR from 'swr';
 interface UseTableProps {
   getUrl: string;
   hasInterval?: boolean;
+  hasRequestButton?: boolean;
   postUrl?: string;
   buttonSettings?: ButtonSettings;
   hasChip?: boolean;
@@ -35,6 +38,7 @@ interface UseSWRState<T> {
 export default function useTable<T = any>({
   getUrl,
   hasInterval = true,
+  hasRequestButton = false,
   postUrl,
   buttonSettings = {
     isPopover: false,
@@ -53,9 +57,13 @@ export default function useTable<T = any>({
   const setButtonSettings = useSetRecoilState(buttonSettingState);
   const setGetApiUrl = useSetRecoilState(getApiUrlState);
   const setPostApiUrl = useSetRecoilState(postApiUrlState);
+  const setHasRequestButton = useSetRecoilState(hasRequestButtonState);
   const setHasChip = useSetRecoilState(hasChipState);
   const setFilterName = useSetRecoilState(queryFilter);
-  const { data, error } = useSWR<UseSWRState<T>>(getUrl, { refreshInterval: hasInterval ? 5000 : 0 });
+  const setSgRequestForm = useSetRecoilState(sgRequestFormState);
+  const { data, error } = useSWR<UseSWRState<T>>(getUrl, {
+    refreshInterval: hasInterval ? 10000 : 0,
+  });
 
   let dataError = data?.error;
   let dataMsg = data?.msg;
@@ -68,6 +76,14 @@ export default function useTable<T = any>({
       setTitle(undefined);
       setHasChip(false);
       setFilterName('');
+      setHasRequestButton(false);
+      setSgRequestForm({
+        protocol: 'TCP',
+        source: undefined,
+        sourceId: undefined,
+        destination: undefined,
+        destinationId: undefined,
+      });
     };
   }, [
     setResults,
@@ -76,6 +92,8 @@ export default function useTable<T = any>({
     setTitle,
     setHasChip,
     setFilterName,
+    setHasRequestButton,
+    setSgRequestForm,
   ]);
 
   useEffect(() => {
@@ -84,6 +102,7 @@ export default function useTable<T = any>({
     setPostApiUrl(postUrl);
     setButtonSettings(buttonSettings);
     setHasChip(hasChip);
+    setHasRequestButton(hasRequestButton);
   }, [
     setGetApiUrl,
     setPostApiUrl,
@@ -95,6 +114,8 @@ export default function useTable<T = any>({
     buttonSettings,
     setHasChip,
     hasChip,
+    setHasRequestButton,
+    hasRequestButton,
   ]);
 
   useEffect(() => {

@@ -51,14 +51,14 @@ const sidebarConfig = [
         title: 'Request',
         path: '/security-groups/request',
       },
-      // {
-      //   title: 'My Rules',
-      //   path: '/security-groups/my-rules',
-      // },
-      // {
-      //   title: 'All Rules',
-      //   path: '/security-groups/all-rules',
-      // },
+      {
+        title: 'My Rules',
+        path: '/security-groups/my-rules',
+      },
+      {
+        title: 'All Rules',
+        path: '/security-groups/all-rules',
+      },
     ],
   },
   {
