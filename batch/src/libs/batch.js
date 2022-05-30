@@ -158,7 +158,7 @@ class Batch {
         };
       });
 
-      // 현재 내용과 일치하지 않는 애들 업데이트(삭제되지 않은 경우만)
+      // 현재 내용과 일치하지 않는 애들 삭제
       await prisma.resource.deleteMany({
         where: {
           AND: [
