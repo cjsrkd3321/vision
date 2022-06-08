@@ -1,62 +1,126 @@
 export const SG_SERVER_EC2 = `
   SELECT 
-    account_id, 
-    region,
-    instance_id,
-    title, 
-    private_ip_address as private_ip, 
-    public_ip_address as public_ip, 
-    instance_state as state, 
-    vpc_id,
-    security_groups as sg
+    EC2.account_id, 
+    ACCOUNT.account_aliases ->> 0 AS alias,
+    EC2.region,
+    EC2.instance_id,
+    EC2.title, 
+    EC2.private_ip_address as private_ip, 
+    EC2.public_ip_address as public_ip, 
+    EC2.instance_state as state, -- 이거 필요없을듯 ?
+    EC2.vpc_id,
+    EC2.security_groups as sg
   FROM 
-    aws_ec2_instance
+    aws_ec2_instance AS EC2
+    JOIN aws_account AS ACCOUNT ON ACCOUNT.account_id = EC2.account_id
   WHERE
     instance_state = 'running'
 `;
 
 // FIXME: LB 관련 쿼리 수정 필요
-// export const SG_LB_NLB = `
-//   WITH records AS (
-//     SELECT RECORD.name as name, RECORD.type as type, RECORD.records ->> 0 as domain
-//     FROM aws_route53_zone as ZONE
-//     JOIN aws_route53_record AS RECORD ON ZONE.id = RECORD.zone_id
-//     WHERE
-//         RECORD.type = 'CNAME' or RECORD.type = 'A'
-//   )
-//   SELECT NLB.account_id, NLB.region, NLB.name, NLB.dns_name as record, records.name as dns_name, NLB.state_code
-//   FROM aws_ec2_network_load_balancer as NLB
-//     JOIN records ON records.domain = NLB.dns_name
-//   WHERE NLB.state_code = 'active'
+export const SG_LB_NLB = `
+  WITH records AS (
+    SELECT substring(RECORD.name, 1, char_length(RECORD.name) - 1) as name, RECORD.type as type, RECORD.records ->> 0 as domain
+    FROM aws_route53_zone as ZONE
+    JOIN aws_route53_record AS RECORD ON ZONE.id = RECORD.zone_id
+    WHERE
+        RECORD.type = 'CNAME' or RECORD.type = 'A'
+  )
+  SELECT 
+    NLB.arn,
+    NLB.account_id, 
+    ACCOUNT.account_aliases ->> 0 AS alias,
+    NLB.region, 
+    NLB.name, 
+    NLB.dns_name as record, 
+    records.name as dns_name, 
+    LISTENER.protocol, 
+    LISTENER.port, 
+    NLB.state_code,
+    NLB.vpc_id
+  FROM 
+    aws_ec2_network_load_balancer as NLB
+    JOIN aws_account AS ACCOUNT ON ACCOUNT.account_id = NLB.account_id
+    JOIN aws_ec2_load_balancer_listener AS LISTENER ON NLB.arn = LISTENER.load_balancer_arn
+    JOIN records ON records.domain = NLB.dns_name
+  WHERE NLB.state_code = 'active'
+  AND NLB.type = 'network'
 
-//   UNION
+  UNION
 
-//   SELECT NLB.account_id, NLB.region, NLB.name, NLB.dns_name as record, records.name as dns_name, NLB.state_code
-//   FROM aws_ec2_network_load_balancer as NLB
-//     LEFT OUTER JOIN records ON records.domain = NLB.dns_name
-//   WHERE NLB.state_code = 'active'
-// `;
+  SELECT 
+    NLB.arn,
+    NLB.account_id, 
+    ACCOUNT.account_aliases ->> 0 AS alias,
+    NLB.region, 
+    NLB.name, 
+    NLB.dns_name as record, 
+    records.name as dns_name, 
+    LISTENER.protocol, 
+    LISTENER.port, 
+    NLB.state_code,
+    NLB.vpc_id
+  FROM 
+    aws_ec2_network_load_balancer as NLB
+    JOIN aws_account AS ACCOUNT ON ACCOUNT.account_id = NLB.account_id
+    JOIN aws_ec2_load_balancer_listener AS LISTENER ON NLB.arn = LISTENER.load_balancer_arn
+    LEFT OUTER JOIN records ON records.domain = NLB.dns_name
+  WHERE NLB.state_code = 'active'
+  AND NLB.type = 'network'
+`;
 
-// export const SG_LB_ALB = `
-//   WITH records AS (
-//     SELECT RECORD.name as name, RECORD.type as type, RECORD.records ->> 0 as domain
-//     FROM aws_route53_zone as ZONE
-//     JOIN aws_route53_record AS RECORD ON ZONE.id = RECORD.zone_id
-//     WHERE
-//         RECORD.type = 'CNAME' or RECORD.type = 'A'
-//   )
-//   SELECT ALB.account_id, ALB.region, ALB.name, ALB.dns_name as record, records.name as dns_name, ALB.state_code
-//   FROM aws_ec2_application_load_balancer as ALB
-//     JOIN records ON records.domain = ALB.dns_name
-//   WHERE ALB.state_code = 'active'
+export const SG_LB_ALB = `
+  WITH records AS (
+    SELECT substring(RECORD.name, 1, char_length(RECORD.name) - 1) as name, RECORD.type as type, RECORD.records ->> 0 as domain
+    FROM aws_route53_zone as ZONE
+    JOIN aws_route53_record AS RECORD ON ZONE.id = RECORD.zone_id
+    WHERE
+        RECORD.type = 'CNAME' or RECORD.type = 'A'
+  )
+  SELECT 
+    ALB.arn, 
+    ALB.account_id, 
+    ACCOUNT.account_aliases ->> 0 AS alias,
+    ALB.region, 
+    ALB.name, 
+    ALB.dns_name as record, 
+    records.name as dns_name, 
+    LISTENER.protocol, 
+    LISTENER.port, 
+    ALB.state_code, 
+    ALB.vpc_id
+  FROM 
+    aws_ec2_application_load_balancer as ALB
+    JOIN aws_account AS ACCOUNT ON ACCOUNT.account_id = ALB.account_id
+    JOIN aws_ec2_load_balancer_listener AS LISTENER ON ALB.arn = LISTENER.load_balancer_arn
+    JOIN records ON records.domain = ALB.dns_name
+  WHERE 
+    ALB.state_code = 'active'
+    AND ALB.type = 'application'
 
-//   UNION
+  UNION
 
-//   SELECT ALB.account_id, ALB.region, ALB.name, ALB.dns_name as record, records.name as dns_name, ALB.state_code
-//   FROM aws_ec2_application_load_balancer as ALB
-//     LEFT OUTER JOIN records ON records.domain = ALB.dns_name
-//   WHERE ALB.state_code = 'active'
-// `;
+  SELECT 
+    ALB.arn, 
+    ALB.account_id, 
+    ACCOUNT.account_aliases ->> 0 AS alias,
+    ALB.region, 
+    ALB.name, 
+    ALB.dns_name as record, 
+    records.name as dns_name, 
+    LISTENER.protocol, 
+    LISTENER.port, 
+    ALB.state_code, 
+    ALB.vpc_id
+  FROM 
+    aws_ec2_application_load_balancer as ALB
+    JOIN aws_account AS ACCOUNT ON ACCOUNT.account_id = ALB.account_id
+    JOIN aws_ec2_load_balancer_listener AS LISTENER ON ALB.arn = LISTENER.load_balancer_arn
+    LEFT OUTER JOIN records ON records.domain = ALB.dns_name
+  WHERE 
+    ALB.state_code = 'active'
+    AND ALB.type = 'application'
+`;
 
 // // Account
 

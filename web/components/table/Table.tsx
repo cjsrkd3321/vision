@@ -97,6 +97,11 @@ function applySortFilter(
             return false;
         }
         return true;
+      } else if (query.startsWith('NOT:')) {
+        const splitedQuery = query.slice(4);
+        if (splitedQuery !== '' && refinedData.includes(splitedQuery.trim().toLowerCase()))
+          return false;
+        return true;
       } else {
         return refinedData.includes(query.trim().toLowerCase());
       }
@@ -189,20 +194,24 @@ export default function Table({ rows = 10 }: any) {
         if (typeof value._id !== 'number' || value._id !== id) continue;
 
         if (sgRequestForm.source && sgRequestForm.destination) {
-          console.log('ITS FULL!!');
           return;
         }
 
-        if (sgRequestForm.source) {
+        let tmpValue = { ...value };
+        ['no', 'account_id', 'region', '_id', 'state'].forEach((e) => delete tmpValue[e]);
+
+        const presentValue = Object.values(tmpValue);
+
+        if (sgRequestForm.sourceIp || sgRequestForm.source) {
           setSgRequestForm({
             ...sgRequestForm,
-            destination: `${value.instance_id}(${value.title} / ${value.private_ip} / ${value.public_ip})`,
+            destination: `${JSON.stringify(presentValue).replaceAll(`"`, ` `)}`,
             destinationId: value._id,
           });
         } else {
           setSgRequestForm({
             ...sgRequestForm,
-            source: `${value.instance_id}(${value.title} / ${value.private_ip} / ${value.public_ip})`,
+            source: `${JSON.stringify(presentValue).replaceAll(`"`, ` `)}`,
             sourceId: value._id,
           });
         }

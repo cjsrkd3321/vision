@@ -50,7 +50,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
 
   // NOTE: POST
   if (req.method === 'POST') {
-    return res.status(200).json({ ok: true, error: 'Not implemented' });
+    return res.status(404).json({ ok: true, error: 'Not implemented' });
   }
 }
 

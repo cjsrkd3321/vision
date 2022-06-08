@@ -94,7 +94,7 @@ model SecurityGroup {
   source            String
   reason            String    @db.VarChar(256)
   status            STATUS
-  uid               String    @unique
+  uid               String    
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId            Int
 }
@@ -109,9 +109,14 @@ enum STATUS {
   REQUEST_CREATE
   REQUEST_MODIFY
   REQUEST_DELETE
+  APPROVE_CREATE
+  APPROVE_MODIFY
+  APPROVE_DELETE
   COMPLETED
   DELETED
   DETECT_MODIFIED // Modified by others except for this system
   DETECT_DELETED // Deleted by others except for this system
-  FALIED
+  FAILED_CREATE
+  FAILED_MODIFY
+  FAILED_DELETE
 }

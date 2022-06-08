@@ -34,6 +34,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
         const result = JSON.parse(resource.result);
         delete result.sg;
         delete result.vpc_id;
+        delete result.arn;
 
         return {
           ...resource,

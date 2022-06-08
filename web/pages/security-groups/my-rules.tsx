@@ -5,10 +5,7 @@ import { User } from '@prisma/client';
 import { NextPage, NextPageContext } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import {
-  Container,
-  Typography,
-} from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import useTable from '@libs/hooks/useTable';
 import { getMe } from '@libs/server/queries';
 
@@ -16,6 +13,13 @@ const MyRules: NextPage<{ me: User }> = ({ me }) => {
   const router = useRouter();
   const { results, dataError, dataMsg, error } = useTable({
     getUrl: '/api/security-groups/my-rules',
+    postUrl: '/api/security-groups/delete',
+    buttonSettings: {
+      isPopover: false,
+      text: 'Delete',
+      color: 'error',
+      size: 'medium',
+    },
     existsTitle: false,
   });
 

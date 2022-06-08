@@ -5,11 +5,7 @@ import { User } from '@prisma/client';
 import { NextPage, NextPageContext } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import {
-    Alert,
-  Container,
-  Typography,
-} from '@mui/material';
+import { Alert, Container, Typography } from '@mui/material';
 import useTable from '@libs/hooks/useTable';
 import { getMe } from '@libs/server/queries';
 
@@ -17,6 +13,13 @@ const AllRules: NextPage<{ me: User }> = ({ me }) => {
   const router = useRouter();
   const { results, dataError, dataMsg, error } = useTable({
     getUrl: '/api/security-groups/all-rules',
+    postUrl: '/api/security-groups/approve',
+    buttonSettings: {
+      isPopover: false,
+      text: 'Approve',
+      color: 'info',
+      size: 'medium',
+    },
     existsTitle: false,
   });
 
@@ -28,18 +31,18 @@ const AllRules: NextPage<{ me: User }> = ({ me }) => {
     <Layout title='SECURITY GROUP - All Rules' userInfo={me}>
       {me ? (
         <>
-        {dataError ? (
+          {dataError ? (
             <Alert
-                variant='filled'
-                severity='error'
-                sx={{ minWidth: '100%', mt: 1, mb: 3 }}
+              variant='filled'
+              severity='error'
+              sx={{ minWidth: '100%', mt: 1, mb: 3 }}
             >
-                {dataError}
+              {dataError}
             </Alert>
-        ) : null}
+          ) : null}
           <Table rows={10} />
         </>
-      ) : ( 
+      ) : (
         <Container
           sx={{
             height: '100vh',

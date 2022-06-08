@@ -76,6 +76,7 @@ export type Protocol = 'TCP' | 'UDP' | 'ICMP';
 export interface SgRequestForm {
   protocol: Protocol;
   source?: string;
+  sourceIp?: string;
   sourceId?: number;
   destination?: string;
   destinationId?: number;
@@ -86,6 +87,7 @@ export const sgRequestFormState = atom<SgRequestForm>({
   default: {
     protocol: 'TCP',
     source: undefined,
+    sourceIp: undefined,
     sourceId: undefined,
     destination: undefined,
     destinationId: undefined,

@@ -11,7 +11,7 @@ import {
   QueryTitle,
   queryTitle,
   queryTitles,
-  sgRequestFormState,
+  sgRequestFormState
 } from '@libs/atoms';
 import { useEffect } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
@@ -28,7 +28,7 @@ interface UseTableProps {
   existsTitle?: boolean;
 }
 
-interface UseSWRState<T> {
+export interface UseSWRState<T> {
   ok: boolean;
   data: T;
   error?: string;
@@ -62,7 +62,7 @@ export default function useTable<T = any>({
   const setFilterName = useSetRecoilState(queryFilter);
   const setSgRequestForm = useSetRecoilState(sgRequestFormState);
   const { data, error } = useSWR<UseSWRState<T>>(getUrl, {
-    refreshInterval: hasInterval ? 10000 : 0,
+    refreshInterval: hasInterval ? 3000 : 0,
   });
 
   let dataError = data?.error;
