@@ -1,0 +1,7 @@
+[default]
+region = ap-northeast-2
+output=json
+
+[sub1]
+region = ap-northeast-2
+output=json

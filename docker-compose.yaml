@@ -32,6 +32,21 @@ services:
     depends_on:
       - mysql
       - steampipe
+  batch-sg:
+    build:
+      context: ./batch-sg
+    image: batch-sg
+    container_name: 'batch-sg'
+    restart: on-failure
+    environment:
+      NODE_ENV: 'production'
+      SP_HOST: steampipe
+      SP_PASSWORD: ${SP_PASSWORD}
+      DATABASE_URL: 'mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?connection_limit=100'
+      SP_TTL: ${SP_TTL}
+    depends_on:
+      - mysql
+      - steampipe
   mysql:
     platform: linux/amd64
     image: mysql:5.7
