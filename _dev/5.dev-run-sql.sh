@@ -1,2 +1,2 @@
-cd batch
+cd ../batch
 npx prisma studio
