@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  userId     String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
+  role       Role
+  queries    Queries[]
+  exceptions Exception[]
+  securityGroups SecurityGroup[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Compliance {
+  id           Int         @id @default(autoincrement())
+  result       String      @db.Text
+  uid          String
+  registeredAt DateTime    @default(now())
+  isDeleted    Boolean     @default(false)
+  deletedAt    DateTime?
+  exceptions   Exception[]
+  queries      Queries?    @relation(fields: [queriesId], references: [id], onDelete: Cascade)
+  queriesId    Int?
+}
+
+model Exception {
+  id           Int        @id @default(autoincrement())
+  compliance   Compliance @relation(fields: [complianceId], references: [id], onDelete: Cascade)
+  complianceId Int
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int
+  registeredAt DateTime   @default(now())
+  reason       String
+}
+
+model Resource {
+  id        Int      @id @default(autoincrement())
+  result    String   @db.Text
+  uid       String
+  queries   Queries? @relation(fields: [queriesId], references: [id], onDelete: Cascade)
+  queriesId Int?
+}
+
+model Queries {
+  id           Int          @id @default(autoincrement())
+  category     CATEGORY
+  type         String
+  name         String       @unique
+  query        String       @db.VarChar(2000)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       Int?
+  registeredAt DateTime     @default(now())
+  compliances  Compliance[]
+  resources    Resource[]
+
+  @@map("query")
+}
+
+enum CATEGORY {
+  COMPLIANCE
+  CUSTOM
+  SG
+}
+
+model SecurityGroup {
+  id                Int       @id @default(autoincrement())
+  accountId         String
+  region            String
+  sgId              String
+  sgrId             String?
+  requestedAt       DateTime  @default(now())
+  createdAt         DateTime?
+  modifiedAt        DateTime?
+  deletedAt         DateTime?
+  modifyDetectedAt  DateTime?
+  deleteDetectedAt  DateTime?
+  protocol          PROTOCOL
+  port              Int
+  source            String
+  reason            String    @db.VarChar(256)
+  status            STATUS
+  uid               String    
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            Int
+}
+
+enum PROTOCOL {
+  TCP
+  UDP
+  ICMP
+}
+
+enum STATUS {
+  REQUEST_CREATE
+  REQUEST_MODIFY
+  REQUEST_DELETE
+  APPROVE_CREATE
+  APPROVE_MODIFY
+  APPROVE_DELETE
+  COMPLETED
+  DELETED
+  DETECT_MODIFIED // Modified by others except for this system
+  DETECT_DELETED // Deleted by others except for this system
+  FAILED_CREATE
+  FAILED_MODIFY
+  FAILED_DELETE
+}
