@@ -49,8 +49,9 @@ interface ComplianceResult {
 }
 
 function descendingComparator(a: any, b: any, orderBy: string) {
-  if (b[orderBy] < a[orderBy]) return -1;
-  if (b[orderBy] > a[orderBy]) return 1;
+  const [firstString, secondString] = [a[orderBy] ?? '', b[orderBy] ?? ''];
+  if (secondString < firstString) return 1;
+  if (secondString > firstString) return -1;
   return 0;
 }
 
@@ -67,11 +68,9 @@ function applySortFilter(
 ) {
   if (!array) return [];
 
-  const stabilizedThis = array.map((el, index: number) => [el, index]);
+  const stabilizedThis = [...array];
   stabilizedThis.sort((a: ComplianceResult, b: ComplianceResult) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return +a[1] - +b[1];
+    return comparator(a, b);
   });
   if (query) {
     return filter(array, (arr) => {
@@ -107,7 +106,7 @@ function applySortFilter(
       }
     });
   }
-  return stabilizedThis.map((el) => el[0]);
+  return stabilizedThis;
 }
 
 function getFormattedSQL(value: any) {
