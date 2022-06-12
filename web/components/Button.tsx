@@ -1,3 +1,4 @@
+import { CircularProgress } from '@mui/material';
 import MuiButton from '@mui/material/Button';
 
 export default function Button({
@@ -7,6 +8,7 @@ export default function Button({
   onClick,
   refer,
   size = 'medium',
+  loading = false,
   ...rest
 }: {
   id?: number;
@@ -22,6 +24,7 @@ export default function Button({
     | undefined;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   size?: 'small' | 'medium' | 'large';
+  loading?: boolean;
   [key: string]: any;
 }) {
   return (
@@ -34,6 +37,9 @@ export default function Button({
       size={size}
       {...rest}
     >
+      {loading ? (
+        <CircularProgress color='inherit' size={20} sx={{ mr: 1 }} />
+      ) : null}
       {text}
     </MuiButton>
   );

@@ -466,6 +466,7 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                     minWidth: '100%',
                     marginTop: 1,
                   }}
+                  loading={loading}
                   disabled={loading ? true : false}
                 />
                 <Button
