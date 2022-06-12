@@ -455,6 +455,7 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                     });
                     setIsSrcIP(false);
                     reset();
+                    responseData.error = undefined;
                   }}
                 />
                 {!loading && responseData?.error ? (
