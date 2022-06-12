@@ -4,7 +4,7 @@ import { withSsrSession } from '@libs/server/withSession';
 import { User } from '@prisma/client';
 import { NextPage, NextPageContext } from 'next';
 import { useRouter } from 'next/router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
@@ -36,9 +36,10 @@ import { Protocol, SgRequestForm, sgRequestFormState } from '@libs/atoms';
 import useMutation from '@libs/hooks/useMutation';
 import useSWR from 'swr';
 
-
 const Request: NextPage<{ me: User }> = ({ me }) => {
-  const cidrIPv4Regex = new RegExp('^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)(\/([1-9]|[1-2][0-9]|3[0-2])){0,1}$');
+  const cidrIPv4Regex = new RegExp(
+    '^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)(/([1-9]|[1-2][0-9]|3[0-2])){0,1}$'
+  );
 
   const router = useRouter();
   const [ids, setIds] = useState<{ srcId?: number; dstId?: number }>({
@@ -100,7 +101,7 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
     setFocus,
     clearErrors,
     getValues,
-  } = useForm<{ port: number; reason: string, sourceIp: string }>({
+  } = useForm<{ port: number; reason: string; sourceIp: string }>({
     defaultValues: {
       reason: '',
     },
@@ -143,7 +144,15 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
     sourceId,
     destinationId,
   }: Partial<SgRequestForm>) => {
-    return ({ port, reason, sourceIp }: { port: number; reason: string; sourceIp: string }) => {
+    return ({
+      port,
+      reason,
+      sourceIp,
+    }: {
+      port: number;
+      reason: string;
+      sourceIp: string;
+    }) => {
       if (loading) return;
       if ((!sourceIp || !sourceId) && !destinationId) return;
       request({
@@ -159,7 +168,6 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
 
   const handleChange = (event: SelectChangeEvent) => {
     const protocol = event.target.value as Protocol;
-    setValue('port', -1);
     setProtocol(protocol);
     setSgRequestForm({ ...sgRequestForm, protocol });
   };
@@ -175,13 +183,17 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
               mb: 2,
             }}
             disabled={isSrcIP}
-            onClick={() => { 
-              setIsSrcIP(true); 
+            onClick={() => {
+              setIsSrcIP(true);
               setIds({
                 ...ids,
                 srcId: undefined,
               });
-              setSgRequestForm({ ...sgRequestForm, source: undefined, sourceId: undefined });
+              setSgRequestForm({
+                ...sgRequestForm,
+                source: undefined,
+                sourceId: undefined,
+              });
               setValue('sourceIp', '');
             }}
           />
@@ -199,15 +211,28 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                 <TextField
                   sx={{ minWidth: '100%' }}
                   {...register('sourceIp', {
-                    onChange: () => setSgRequestForm({ ...sgRequestForm, sourceIp: getValues('sourceIp')}),
-                    pattern: !sgRequestForm.source ? {
-                      value: /^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)(\/([1-9]|[1-2][0-9]|3[0-2])){0,1}$/,
-                      message: 'Incorrect IPv4. Please change it to the correct value.',
-                    } : undefined,
+                    onChange: () =>
+                      setSgRequestForm({
+                        ...sgRequestForm,
+                        sourceIp: getValues('sourceIp'),
+                      }),
+                    pattern: !sgRequestForm.source
+                      ? {
+                          value:
+                            /^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)(\/([1-9]|[1-2][0-9]|3[0-2])){0,1}$/,
+                          message:
+                            'Incorrect IPv4. Please change it to the correct value.',
+                        }
+                      : undefined,
                   })}
                   disabled={!isSrcIP}
                   label='Source'
-                  error={(isSrcIP && errors.sourceIp?.message) || (!isSrcIP && !sgRequestForm.sourceId) ? true : false}
+                  error={
+                    (isSrcIP && errors.sourceIp?.message) ||
+                    (!isSrcIP && !sgRequestForm.sourceId)
+                      ? true
+                      : false
+                  }
                   placeholder={'Input IPv4 like 192.168.0.1, 10.0.0.4/32 etc..'}
                 />
                 {errors.sourceIp?.message ? (
@@ -219,7 +244,10 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                     {errors.sourceIp?.message}
                   </Alert>
                 ) : null}
-                {!isSrcIP && srcData && srcData.data && srcData.data.length !== 0 ? (
+                {!isSrcIP &&
+                srcData &&
+                srcData.data &&
+                srcData.data.length !== 0 ? (
                   <Card sx={{ width: '100%', overflow: 'hidden', my: 1 }}>
                     <TableContainer
                       sx={{ maxHeight: 440, backgroudColor: 'black' }}
@@ -271,7 +299,9 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                       onRowsPerPageChange={handleChangeRowsPerPage}
                     />
                   </Card>
-                ) : ids.srcId  ? <CircularProgress color='inherit' size={20} sx={{ my: 1 }} /> : null}
+                ) : ids.srcId ? (
+                  <CircularProgress color='inherit' size={20} sx={{ my: 1 }} />
+                ) : null}
                 <TextField
                   disabled
                   label='Destination'
@@ -331,7 +361,9 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                       onRowsPerPageChange={handleChangeRowsPerPage}
                     />
                   </Card>
-                ) : ids.dstId ? <CircularProgress color='inherit' size={20} sx={{ my: 1 }} /> : null}
+                ) : ids.dstId ? (
+                  <CircularProgress color='inherit' size={20} sx={{ my: 1 }} />
+                ) : null}
                 {errors.sourceIp?.message || !sgRequestForm.destinationId ? (
                   <Alert
                     variant='filled'
@@ -375,7 +407,10 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                     sx={{ minWidth: '10%', mr: 1 }}
                     {...register('port', {
                       valueAsNumber: true,
-                      required: 'The Port is required.',
+                      required:
+                        sgRequestForm.protocol !== 'ICMP'
+                          ? 'The Port is required.'
+                          : undefined,
                       min: {
                         message: 'Minimum port value is 1.',
                         value: 1,
