@@ -4,9 +4,9 @@
   "description": "batch",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon",
+    "dev": "NODE_ENV=development nodemon",
     "build": "babel src -d build",
-    "start": "node build/init.js"
+    "start": "NODE_ENV=production node build/init.js"
   },
   "author": "",
   "license": "ISC",
@@ -20,8 +20,7 @@
     "prisma": "^3.15.1"
   },
   "dependencies": {
-    "@aws-sdk/client-ec2": "^3.100.0",
-    "@aws-sdk/client-iam": "^3.56.0",
+    "@aws-sdk/client-iam": "^3.107.0",
     "@prisma/client": "^3.15.1",
     "dotenv": "^16.0.0",
     "md5": "^2.3.0",
