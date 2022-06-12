@@ -16,4 +16,4 @@ fi
 docker-compose build
 docker-compose up -d
 
-docker rmi $(docker images -f "dangling=true" -q)
+# docker rmi $(docker images -f "dangling=true" -q)
