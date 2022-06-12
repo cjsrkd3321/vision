@@ -1,7 +1,8 @@
 import {
   getSecurityGroupInfo,
   getSgWithUniqueId,
-  InstanceType
+  getVpcPeeringInfoQuery,
+  InstanceType,
 } from '@libs/queries';
 import withHandler from '@libs/server/withHandler';
 import { withApiSession } from '@libs/server/withSession';
@@ -94,6 +95,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
     }
 
     try {
+      // NOTE: 목적지는 무조건 고정이기 때문에 먼저 찾아옴.
       const dst = await prisma.resource.findUnique({
         where: { id: dstId },
         select: {
@@ -129,25 +131,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
         vpc_id: dstVpcId,
       } = JSON.parse(dst.result);
 
+      const sgType = srcId ? 'REF' : 'IP';
+
       const dstResult = await getSgWithUniqueId({
         client: pgClient,
-        sgType: 'IP',
+        sgType,
         instanceType: dstInstanceType,
         uniqueId: dstInstanceType === 'EC2' ? dstInstanceId : dstArn,
       });
       if (!dstResult) {
         return res.status(404).json({
           ok: false,
-          error: `Dst(${dstInstanceId}) has no SG with tag(Type = IP)`,
+          error: `Dst(${dstInstanceId}) has no SG with tag(Type = ${sgType})`,
         });
       }
 
       const { account_id, sg_id: dstSgId } = dstResult;
 
-      // NOTE:
+      // NOTE: 출발지는 sourceIp 또는 srcId 둘 중 하나만 존재
       let srcSgId = undefined;
       if (srcId) {
-        // FIXME: DUPLICATED
         let src = await prisma.resource.findUnique({
           where: { id: srcId },
           select: {
@@ -183,11 +186,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
           vpc_id: srcVpcId,
         } = JSON.parse(src.result);
 
+        // NOTE: VPC ID가 다른 경우 Peering 존재하는지 확인
         if (srcVpcId !== dstVpcId) {
-          return res.status(400).json({
-            ok: false,
-            error: `Src VPC and Dst VPC must be equal`,
-          });
+          const vpcPeering = (
+            await pgClient?.query(getVpcPeeringInfoQuery(srcVpcId, dstVpcId))
+          ).rows;
+
+          if (vpcPeering.length === 0) {
+            return res.status(400).json({
+              ok: false,
+              error: `${srcVpcId} and ${dstVpcId} are not peered`,
+            });
+          }
+
+          if (
+            vpcPeering.length !== 1 &&
+            vpcPeering[0].region !== vpcPeering[1].region
+          ) {
+            return res.status(400).json({
+              ok: false,
+              error: `Only can open for using IP because their region are not same`,
+            });
+          }
         }
 
         const srcResult = await getSgWithUniqueId({
@@ -206,9 +226,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
         srcSgId = srcResult.sg_id;
       }
 
-      const uid = md5(
-        account_id + dstSgId + protocol + port + sourceIp ?? srcSgId
-      );
+      const src = sourceIp
+        ? sourceIp.indexOf('/') === -1
+          ? sourceIp + '/32'
+          : sourceIp
+        : srcSgId;
+      const uid = md5(account_id + dstSgId + protocol + port + src);
 
       const duplicatedResult = await prisma?.securityGroup.findFirst({
         where: {
@@ -235,7 +258,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
             sgId: dstSgId,
             protocol,
             port,
-            source: sourceIp ?? srcSgId,
+            source: src,
           })
         )
       ).rows;
@@ -255,7 +278,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
           sgId: dstSgId,
           protocol,
           port,
-          source: sourceIp ?? srcSgId,
+          source: src,
           reason,
           status: 'REQUEST_CREATE',
           uid,

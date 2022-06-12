@@ -1,5 +1,5 @@
 import {
-  getSgWithUniqueId, InstanceType, listInstancesWithSg
+  getSgWithUniqueId, InstanceType, listInstancesWithSgQuery
 } from '@libs/queries';
 import withHandler from '@libs/server/withHandler';
 import { withApiSession } from '@libs/server/withSession';
@@ -67,7 +67,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<Response>) {
     }
 
     const { sg_id } = instance;
-    instances = (await pgClient?.query(listInstancesWithSg(sg_id))).rows;
+    instances = (await pgClient?.query(listInstancesWithSgQuery(sg_id))).rows;
     if (instances.length === 0) {
       return res.status(404).json({
         ok: false,

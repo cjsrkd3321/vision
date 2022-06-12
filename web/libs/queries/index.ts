@@ -1,6 +1,6 @@
 export type SecurityGroupType = 'REF' | 'IP';
 
-export const listInstancesWithSg = (sgId: string) => {
+export const listInstancesWithSgQuery = (sgId: string) => {
   return `
       WITH records AS (
           SELECT substring(RECORD.name, 1, char_length(RECORD.name) - 1) as name, RECORD.type as type, RECORD.records ->> 0 as domain
@@ -52,7 +52,7 @@ export const listInstancesWithSg = (sgId: string) => {
       `;
 };
 
-export const getSgWithAlbArn = (sgType: SecurityGroupType, albArn: string) => {
+export const getSgWithAlbArnQuery = (sgType: SecurityGroupType, albArn: string) => {
   return `
     WITH sg AS (
         SELECT group_id, tags
@@ -73,7 +73,7 @@ export const getSgWithAlbArn = (sgType: SecurityGroupType, albArn: string) => {
     `;
 };
 
-export const getSgWithInstanceId = (
+export const getSgWithInstanceIdQuery = (
   sgType: SecurityGroupType,
   instanceId: string
 ) => {
@@ -97,7 +97,7 @@ export const getSgWithInstanceId = (
     `;
 };
 
-export const getSgWithNlbArn = (sgType: SecurityGroupType, nlbArn: string) => {
+export const getSgWithNlbArnQuery = (sgType: SecurityGroupType, nlbArn: string) => {
   return `
         WITH sg AS (
             SELECT EC2.instance_id, SG.group_id
@@ -120,6 +120,24 @@ export const getSgWithNlbArn = (sgType: SecurityGroupType, nlbArn: string) => {
             AND NLB.arn = '${nlbArn}'
         LIMIT 1
     `;
+};
+
+export const getVpcPeeringInfoQuery = (firstVpcId: string, secondVpcId: string) => {
+  return `
+    SELECT
+        region
+    FROM
+        aws_vpc_peering_connection
+    WHERE
+        (
+            (requester_vpc_id = '${firstVpcId}'
+            OR accepter_vpc_id = '${secondVpcId}')
+        OR
+            (requester_vpc_id = '${secondVpcId}'
+            OR accepter_vpc_id = '${firstVpcId}')
+        )
+        AND status_code = 'active'
+  `;
 };
 
 interface SecurityGroupInfo {
@@ -174,11 +192,11 @@ export const getSgWithUniqueId = async ({
 
   let result = null;
   if (instanceType === 'EC2') {
-    [result] = (await client.query(getSgWithInstanceId(sgType, uniqueId))).rows;
+    [result] = (await client.query(getSgWithInstanceIdQuery(sgType, uniqueId))).rows;
   } else if (instanceType === 'ALB') {
-    [result] = (await client.query(getSgWithAlbArn(sgType, uniqueId))).rows;
+    [result] = (await client.query(getSgWithAlbArnQuery(sgType, uniqueId))).rows;
   } else if (instanceType === 'NLB') {
-    [result] = (await client.query(getSgWithNlbArn(sgType, uniqueId))).rows;
+    [result] = (await client.query(getSgWithNlbArnQuery(sgType, uniqueId))).rows;
   } else {
     return null;
   }
