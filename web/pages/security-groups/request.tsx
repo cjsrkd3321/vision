@@ -302,6 +302,15 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                 ) : ids.srcId ? (
                   <CircularProgress color='inherit' size={20} sx={{ my: 1 }} />
                 ) : null}
+                {srcData && srcData.error ? (
+                  <Alert
+                    variant='filled'
+                    severity='error'
+                    sx={{ minWidth: '100%', mt: 1 }}
+                  >
+                    {srcData.error}
+                  </Alert>
+                ) : null}
                 <TextField
                   disabled
                   label='Destination'
@@ -363,6 +372,15 @@ const Request: NextPage<{ me: User }> = ({ me }) => {
                   </Card>
                 ) : ids.dstId ? (
                   <CircularProgress color='inherit' size={20} sx={{ my: 1 }} />
+                ) : null}
+                {dstData && dstData.error ? (
+                  <Alert
+                    variant='filled'
+                    severity='error'
+                    sx={{ minWidth: '100%', mt: 1 }}
+                  >
+                    {dstData.error}
+                  </Alert>
                 ) : null}
                 {errors.sourceIp?.message || !sgRequestForm.destinationId ? (
                   <Alert
